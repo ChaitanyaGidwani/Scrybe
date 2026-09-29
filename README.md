@@ -110,30 +110,62 @@ cp .env.example .env
 
 ### 3. Run Verification Tests
 ```bash
-# Run unit tests
-uv run pytest tests/
+# Run 100+ unit and integration tests (including A2A and API)
+PYTHONPATH=. uv run pytest tests/ -v
 ```
 
-### 4. Project Directory Layout
+### 4. Running Scrybe
+
+#### A2A Multi-Agent Autonomous Pipeline (Recommended)
+```bash
+# Run pipeline using A2A protocol (in-process mode)
+python3 cli.py run --a2a
+
+# Run pipeline in distributed remote A2A mode
+python3 cli.py run --a2a --mode remote
+```
+
+#### Launch the Modern React Intelligence Dashboard
+```bash
+# Start backend API (includes WebSocket streaming & static SPA hosting)
+python3 cli.py api --port 8000
+
+# Launch Vite React frontend dashboard
+python3 cli.py dashboard --type react --port 3000
+```
+Then navigate to `http://localhost:3000` (or `http://localhost:8000` for the unified server).
+
+### 5. Project Directory Layout
 ```
 scrybe/
-├── agents/             # The 6 autonomous agents
+├── a2a/                # A2A Protocol v1.0 Core Layer
+│   ├── models.py       # AgentCard, Task, Message, Artifact, TaskState
+│   ├── server.py       # Base A2A HTTP server & JSON-RPC dispatcher
+│   ├── client.py       # A2A client with SSE streaming support
+│   ├── registry.py     # Local & remote Agent Card discovery
+│   └── orchestrator.py # A2A-powered autonomous pipeline orchestrator
+├── agents/             # The 6 autonomous agents + A2A wrappers
 │   ├── compliance.py   # Pre-flight & PII redactor
-│   ├── reader.py       # Tiered crawler
-│   ├── analyst.py      # Structured entity extraction
-│   ├── memory.py       # Buffer, Reflexion, FAISS
-│   ├── strategist.py   # Multi-source corroboration
+│   ├── reader.py       # Tiered crawler (httpx -> curl_cffi -> Playwright)
+│   ├── analyst.py      # Structured entity extraction & Reflexion
+│   ├── memory.py       # Buffer, Reflexion, FAISS vector store
+│   ├── strategist.py   # Multi-source corroboration (>=2 sources)
 │   ├── formatter.py    # Markdown & PDF generation
-│   └── prompts/        # External prompt template files
-├── tools/              # Scrapers, validators, parsers
-├── storage/            # Pydantic models & SQLite/Postgres engine
-├── memory/             # Vector store & rolling buffer
+│   └── a2a_wrappers.py # A2A Agent Card wrappers for all 6 agents
 ├── api/                # FastAPI application
-├── dashboard/          # Streamlit UI
-config/
-└── sources.yaml        # Target competitor configurations
+│   ├── main.py         # Endpoints, SPA static mount & WebSocket hub
+│   ├── routes.py       # Pricing matrix, audits, insights, reports
+│   └── websocket.py    # Real-time pipeline event broadcasting
+├── tools/              # Scrapers, validators, DOM grounders, parsers
+├── storage/            # Pydantic models & SQLite/Postgres engine
+└── memory/             # Vector store & rolling buffer
+frontend/               # Modern React + Vite Dashboard
+├── src/
+│   ├── components/     # AgentTopology, PipelineTerminal, MatrixView, etc.
+│   ├── App.jsx         # Live WebSocket listener, state sync, view tabs
+│   └── index.css       # Obsidian dark theme, glassmorphism, pulse animations
 docs/                   # Comprehensive research & architecture specs
-tests/                  # Automated test suite
+tests/                  # 100+ automated test suite
 ```
 
 ---
@@ -141,12 +173,12 @@ tests/                  # Automated test suite
 ## 📅 Roadmap & Milestones
 
 - [x] **Phase 0:** Market Research, Compliance Framework & Architecture Specification.
-- [ ] **Milestone 1:** Ingestion Foundation & Compliance Guard (`httpx` + `robots.txt` + SQLite).
-- [ ] **Milestone 2:** Tiered Scraping (`curl_cffi` + `Crawl4AI` + self-healing parser).
-- [ ] **Milestone 3:** Analyst Agent & Schema Extraction with confidence gating.
-- [ ] **Milestone 4:** Strategist Agent & Publication Engine (Multi-source + Markdown/PDF).
-- [ ] **Milestone 5:** Memory & Reflexion Layer (Rolling buffer + FAISS semantic deltas).
-- [ ] **Milestone 6:** FastAPI endpoints, Streamlit dashboard & Docker deployment.
+- [x] **Milestone 1:** Ingestion Foundation & Compliance Guard (`httpx` + `robots.txt` + SQLite).
+- [x] **Milestone 2:** Tiered Scraping (`curl_cffi` + `Playwright` + self-healing parser).
+- [x] **Milestone 3:** Analyst Agent & Schema Extraction with confidence gating.
+- [x] **Milestone 4:** Strategist Agent & Publication Engine (Multi-source + Markdown/PDF).
+- [x] **Milestone 5:** Memory & Reflexion Layer (Rolling buffer + FAISS semantic deltas).
+- [x] **Milestone 6:** A2A Protocol Integration, FastAPI endpoints, React dashboard & WebSocket streaming.
 
 ---
 
