@@ -1,0 +1,58 @@
+# Scrybe Target Web Sources Configuration
+# Vertical: B2B AI Developer Tooling & API Platforms
+
+version: "1.0"
+vertical: "B2B_AI_DEVELOPER_PLATFORMS"
+
+sources:
+  - id: "openai_api_pricing"
+    company_name: "OpenAI"
+    target_url: "https://openai.com/api/pricing/"
+    category: "LLM_INFERENCE"
+    preferred_tier: "httpx"
+    selector_hints:
+      - "table"
+      - "main"
+    check_frequency: "weekly"
+    enabled: true
+
+  - id: "anthropic_pricing"
+    company_name: "Anthropic"
+    target_url: "https://www.anthropic.com/pricing"
+    category: "LLM_INFERENCE"
+    preferred_tier: "httpx"
+    selector_hints:
+      - "table"
+      - "div[data-testid='pricing-table']"
+    check_frequency: "weekly"
+    enabled: true
+
+  - id: "mistral_api_pricing"
+    company_name: "Mistral AI"
+    target_url: "https://mistral.ai/technology/#pricing"
+    category: "LLM_INFERENCE"
+    preferred_tier: "curl_cffi"
+    selector_hints:
+      - "section#pricing"
+    check_frequency: "weekly"
+    enabled: true
+
+  - id: "groq_api_pricing"
+    company_name: "Groq"
+    target_url: "https://groq.com/pricing/"
+    category: "LLM_INFERENCE_LPU"
+    preferred_tier: "httpx"
+    selector_hints:
+      - "div.pricing-grid"
+    check_frequency: "weekly"
+    enabled: true
+
+  - id: "together_ai_pricing"
+    company_name: "Together AI"
+    target_url: "https://www.together.ai/pricing"
+    category: "LLM_INFERENCE_SERVERLESS"
+    preferred_tier: "playwright"
+    selector_hints:
+      - "div.pricing-table"
+    check_frequency: "weekly"
+    enabled: true

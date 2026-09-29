@@ -1,0 +1,1 @@
+"""Scrybe API module."""
