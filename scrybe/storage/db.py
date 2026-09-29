@@ -203,6 +203,16 @@ class DatabaseManager:
             )
             session.commit()
 
+    def get_compliance_audits(self, pipeline_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+        """Retrieve compliance audit records."""
+        with self.get_session() as session:
+            stmt = select(compliance_audits_table)
+            if pipeline_id:
+                stmt = stmt.where(compliance_audits_table.c.pipeline_id == pipeline_id)
+            stmt = stmt.order_by(desc(compliance_audits_table.c.timestamp)).limit(limit)
+            result = session.execute(stmt)
+            return [dict(row._mapping) for row in result.fetchall()]
+
     # ── Raw Documents ──
 
     def save_raw_document(self, pipeline_id: str, doc_data: Dict[str, Any]) -> None:
@@ -298,6 +308,21 @@ class DatabaseManager:
                 )
             )
             session.commit()
+
+    def get_strategic_insights(self, pipeline_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+        """Retrieve strategic insight records."""
+        with self.get_session() as session:
+            stmt = select(strategic_insights_table)
+            if pipeline_id:
+                stmt = stmt.where(strategic_insights_table.c.pipeline_id == pipeline_id)
+            stmt = stmt.order_by(desc(strategic_insights_table.c.created_at)).limit(limit)
+            result = session.execute(stmt)
+            insights = []
+            for row in result.fetchall():
+                item = dict(row._mapping)
+                item["corroborating_sources"] = json.loads(item.pop("corroborating_sources_json", "[]"))
+                insights.append(item)
+            return insights
 
     # ── Reports ──
 
