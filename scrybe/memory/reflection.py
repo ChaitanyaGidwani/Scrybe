@@ -37,10 +37,10 @@ def build_reflexion_prompt(
 
     if prompt_path.exists():
         template = prompt_path.read_text(encoding="utf-8")
-        return template.format(
-            agent_name=agent_name,
-            input_excerpt=input_excerpt[:2000],
-            error_trace=error_trace[:1000],
+        return (
+            template.replace("{agent_name}", agent_name)
+            .replace("{input_excerpt}", input_excerpt[:2000])
+            .replace("{error_trace}", error_trace[:1000])
         )
 
     # Inline fallback prompt

@@ -181,18 +181,11 @@ def text_to_embedding_simple(text: str, dimension: int = 384) -> np.ndarray:
     Returns:
         Normalized numpy array of shape (dimension,).
     """
-    # Use SHA-512 repeatedly to fill the dimension
-    hashes = []
-    current = text.encode("utf-8")
-    while len(hashes) * 64 < dimension * 4:  # 4 bytes per float32
-        h = hashlib.sha512(current).digest()
-        hashes.append(h)
-        current = h
+    # Deterministic pseudo-embedding using seeded PRNG (avoids IEEE-754 NaN bit patterns)
+    seed = int(hashlib.sha256(text.encode("utf-8")).hexdigest()[:8], 16)
+    rng = np.random.default_rng(seed)
+    vec = rng.standard_normal(dimension).astype(np.float32)
 
-    raw_bytes = b"".join(hashes)[: dimension * 4]
-    vec = np.frombuffer(raw_bytes, dtype=np.float32)[:dimension].copy()
-
-    # L2 normalize
     norm = np.linalg.norm(vec)
     if norm > 0:
         vec = vec / norm

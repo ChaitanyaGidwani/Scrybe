@@ -16,6 +16,7 @@ from scrybe.logging_config import get_agent_logger
 from scrybe.memory.buffer import RollingBuffer
 from scrybe.storage.models import (
     CompetitorProductRecord,
+    DeltaType,
     StrategicRecommendation,
     TrendDelta,
 )

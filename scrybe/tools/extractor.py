@@ -116,7 +116,10 @@ def build_extraction_prompt(
         default_path = Path(__file__).resolve().parent.parent / "agents" / "prompts" / "analyst_extract.txt"
         template = default_path.read_text(encoding="utf-8")
 
-    return template.format(source_url=source_url, markdown_content=markdown_content)
+    return (
+        template.replace("{source_url}", source_url)
+        .replace("{markdown_content}", markdown_content)
+    )
 
 
 def parse_llm_json_response(raw_response: str) -> Dict[str, Any]:

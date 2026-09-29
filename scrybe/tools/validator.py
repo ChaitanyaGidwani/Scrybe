@@ -35,6 +35,11 @@ def calculate_confidence(
     cross_field_sanity = _score_cross_field_sanity(extracted)
 
     confidence = (0.5 * dom_grounding) + (0.3 * schema_completeness) + (0.2 * cross_field_sanity)
+
+    # Grounding gate: if data is not grounded in source DOM, cap confidence below threshold
+    if dom_grounding < 0.25:
+        confidence = min(confidence, 0.40)
+
     return round(min(max(confidence, 0.0), 1.0), 3)
 
 
