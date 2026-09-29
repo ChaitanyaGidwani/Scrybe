@@ -13,6 +13,7 @@ from scrybe.logging_config import get_agent_logger
 from scrybe.memory.buffer import RollingBuffer
 from scrybe.memory.reflection import ReflexionLoop, build_reflexion_prompt, apply_reflexion_repair
 from scrybe.storage.models import CompetitorProductRecord, RawScrapedDocument
+from scrybe.tools.constrained_decoder import ConstrainedDecoder
 from scrybe.tools.extractor import build_extraction_prompt, parse_llm_json_response
 from scrybe.tools.validator import validate_record
 
@@ -139,9 +140,19 @@ class AnalystAgent:
                 raw_response = self._call_llm(prompt)
                 extracted = parse_llm_json_response(raw_response)
 
+                # Schema-constrained sanitization and character-level DOM grounding
+                record, grounding_ratio, ungrounded = ConstrainedDecoder.decode_and_ground(
+                    extracted, source_text=doc.content_markdown
+                )
+
+                if ungrounded:
+                    logger.warning(
+                        f"Ungrounded extraction fields detected for {doc.url}: {ungrounded[:3]}"
+                    )
+
                 # Validate and score
                 record, is_valid = validate_record(
-                    extracted,
+                    record.model_dump(),
                     source_text=doc.content_markdown,
                     confidence_threshold=self.confidence_threshold,
                 )
@@ -166,12 +177,15 @@ class AnalystAgent:
                 repair_result = apply_reflexion_repair(repair_response)
                 reflexion_loop.record_attempt("analyst", str(e), repair_result)
 
-                # Use corrected output from Reflexion
+                # Use corrected output from Reflexion with constrained decoding
                 corrected = repair_result.get("corrected_output", {})
                 if corrected:
                     try:
+                        record, _, _ = ConstrainedDecoder.decode_and_ground(
+                            corrected, source_text=doc.content_markdown
+                        )
                         record, is_valid = validate_record(
-                            corrected,
+                            record.model_dump(),
                             source_text=doc.content_markdown,
                             confidence_threshold=self.confidence_threshold,
                         )
