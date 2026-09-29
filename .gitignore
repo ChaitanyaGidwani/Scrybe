@@ -43,3 +43,10 @@ Thumbs.db
 # FAISS index (binary, large)
 *.bin
 *.meta.json
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+
+# Mock artifacts from tests
+MagicMock/

@@ -84,3 +84,11 @@ def test_spa_root_serve(client):
     response = client.get("/")
     assert response.status_code == 200
     assert "text/html" in response.headers.get("content-type", "")
+
+
+def test_pipeline_websocket(client):
+    with client.websocket_connect("/ws/pipeline") as websocket:
+        websocket.send_text("ping")
+        data = websocket.receive_json()
+        assert data.get("type") == "pong"
+

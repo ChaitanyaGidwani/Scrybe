@@ -1,37 +1,28 @@
-version: "3.9"
-
 services:
-  # ── Scrybe API Server ──
-  api:
+  # ── Scrybe Unified API + Dashboard ──
+  scrybe:
     build: .
-    container_name: scrybe-api
+    container_name: scrybe
     ports:
       - "8000:8000"
     env_file: .env
+    environment:
+      - DATABASE_URL=sqlite:////app/data/scrybe.db
+      - REDIS_URL=redis://redis:6379/0
     volumes:
       - ./data:/app/data
       - ./output:/app/output
       - ./config:/app/config
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     restart: unless-stopped
-    command: ["python", "-m", "uvicorn", "scrybe.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-  # ── Scrybe Streamlit Dashboard ──
-  dashboard:
-    build: .
-    container_name: scrybe-dashboard
-    ports:
-      - "8501:8501"
-    env_file: .env
-    volumes:
-      - ./data:/app/data
-      - ./output:/app/output
-      - ./config:/app/config
-    depends_on:
-      - api
-    restart: unless-stopped
-    command: ["streamlit", "run", "scrybe/dashboard/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # ── Redis (Cache & Job Queue) ──
   redis:
@@ -42,6 +33,11 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
 volumes:
   redis_data:
