@@ -4,6 +4,7 @@ const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
   { id: 'matrix', label: 'Price Comparison', icon: 'table_chart' },
   { id: 'strategy', label: 'Market Insights', icon: 'insights' },
+  { id: 'verdict', label: 'Final Verdict', icon: 'gavel', highlight: true },
   { id: 'reports', label: 'Executive Reports', icon: 'article' },
   { id: 'competitors', label: 'Tracked Competitors', icon: 'domain' },
 ];
@@ -23,15 +24,16 @@ export default function Sidebar({ activeTab, setActiveTab, wsConnected, isRunnin
 
       <nav className="sidebar-nav">
         <div className="nav-section-label">MENU</div>
-        {NAV_ITEMS.map(item => (
+        {NAV_ITEMS.map((item) => (
           <button
             key={item.id}
             type="button"
-            className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
+            className={`nav-item ${activeTab === item.id ? 'active' : ''} ${item.highlight ? 'nav-item-highlight' : ''}`}
             onClick={() => setActiveTab(item.id)}
           >
             <span className="material-symbols-outlined">{item.icon}</span>
             <span>{item.label}</span>
+            {item.highlight && <span className="nav-pill-badge">ROI</span>}
           </button>
         ))}
       </nav>
