@@ -248,17 +248,24 @@ def create_analyst_handler(settings=None):
     from scrybe.memory.buffer import RollingBuffer
     from scrybe.storage.models import RawScrapedDocument
     from scrybe.tools.llm_client import LLMClient
+    from config.settings import settings as default_settings
 
+    active_settings = settings or default_settings
     llm_client = None
-    if settings and (settings.openai_api_key or settings.anthropic_api_key or settings.google_api_key):
+    if active_settings and (active_settings.openai_api_key or active_settings.anthropic_api_key or active_settings.google_api_key):
         llm_client = LLMClient(
-            openai_api_key=settings.openai_api_key,
-            anthropic_api_key=settings.anthropic_api_key,
-            google_api_key=settings.google_api_key,
+            openai_api_key=active_settings.openai_api_key,
+            anthropic_api_key=active_settings.anthropic_api_key,
+            google_api_key=active_settings.google_api_key,
         )
 
     buffer = RollingBuffer()
-    agent = AnalystAgent(llm_client=llm_client, buffer=buffer)
+    agent = AnalystAgent(
+        llm_client=llm_client,
+        extraction_model=active_settings.extraction_model if active_settings else "gpt-4o-mini",
+        confidence_threshold=active_settings.confidence_threshold if active_settings else 0.60,
+        buffer=buffer,
+    )
 
     async def handler(task: Task) -> Task:
         message = task.messages[-1] if task.messages else None
@@ -346,17 +353,24 @@ def create_strategist_handler(settings=None):
     from scrybe.memory.buffer import RollingBuffer
     from scrybe.storage.models import CompetitorProductRecord, TrendDelta
     from scrybe.tools.llm_client import LLMClient
+    from config.settings import settings as default_settings
 
+    active_settings = settings or default_settings
     llm_client = None
-    if settings and (settings.openai_api_key or settings.anthropic_api_key or settings.google_api_key):
+    if active_settings and (active_settings.openai_api_key or active_settings.anthropic_api_key or active_settings.google_api_key):
         llm_client = LLMClient(
-            openai_api_key=settings.openai_api_key,
-            anthropic_api_key=settings.anthropic_api_key,
-            google_api_key=settings.google_api_key,
+            openai_api_key=active_settings.openai_api_key,
+            anthropic_api_key=active_settings.anthropic_api_key,
+            google_api_key=active_settings.google_api_key,
         )
 
     buffer = RollingBuffer()
-    agent = StrategistAgent(llm_client=llm_client, buffer=buffer)
+    agent = StrategistAgent(
+        llm_client=llm_client,
+        reasoning_model=active_settings.reasoning_model if active_settings else "gpt-4o",
+        min_corroboration=active_settings.multi_source_min_count if active_settings else 2,
+        buffer=buffer,
+    )
 
     async def handler(task: Task) -> Task:
         message = task.messages[-1] if task.messages else None
