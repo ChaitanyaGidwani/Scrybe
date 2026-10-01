@@ -985,12 +985,6 @@ input, textarea {
   font-size: 10px;
   letter-spacing: 0.06em;
 }
-  border-radius: var(--radius);
-  background: rgba(10, 14, 23, 0.6);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-}
 
 .agent-stats .stat-primary {
   font-weight: 500;
