@@ -434,7 +434,7 @@ input, textarea {
   left: var(--sidebar-width);
   right: 0;
   height: var(--header-height);
-  background: rgba(10, 14, 23, 0.8);
+  background: rgba(10, 14, 23, 0.85);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   z-index: 40;
@@ -443,12 +443,15 @@ input, textarea {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  gap: var(--space-md);
+  overflow-x: hidden;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
+  min-width: 0;
   flex: 1;
 }
 
@@ -463,21 +466,25 @@ input, textarea {
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.04em;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .header-profile-bar {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
   background: var(--surface-low);
-  padding: var(--space-xs) var(--space-md);
+  padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-lg);
-  max-width: 420px;
+  max-width: 300px;
+  min-width: 0;
   overflow: hidden;
+  flex-shrink: 1;
 }
 
 .header-profile-bar .material-symbols-outlined {
-  font-size: 18px;
+  font-size: 16px;
   color: var(--outline);
   flex-shrink: 0;
 }
@@ -494,11 +501,25 @@ input, textarea {
 .header-indicators {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--outline);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 1400px) {
+  .header-indicators {
+    display: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .header-profile-bar {
+    display: none;
+  }
 }
 
 .indicator {
@@ -522,12 +543,13 @@ input, textarea {
 .header-right {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
+  flex-shrink: 0;
 }
 
 .header-divider {
   width: 1px;
-  height: 24px;
+  height: 20px;
   background: var(--outline-variant);
   margin: 0 var(--space-xs);
 }
