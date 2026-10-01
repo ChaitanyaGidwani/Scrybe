@@ -1,77 +1,80 @@
 import React from 'react';
 
-export default function TopHeader({ wsConnected, isRunning, onTriggerPipeline, pipelineMode, setPipelineMode }) {
+const TAB_TITLES = {
+  dashboard: { title: 'Market Overview', subtitle: 'Real-time AI model pricing & competitor movements' },
+  matrix: { title: 'Pricing Comparison', subtitle: 'Side-by-side normalized pricing across all competitors' },
+  strategy: { title: 'Market Insights', subtitle: 'Actionable executive takeaways, price shifts, and opportunities' },
+  reports: { title: 'Executive Reports', subtitle: 'Published market briefs and intelligence digests' },
+  competitors: { title: 'Tracked Competitors', subtitle: '6 active AI providers monitored across the web' },
+};
+
+export default function TopHeader({
+  activeTab,
+  wsConnected,
+  isRunning,
+  onTriggerScan,
+  lastUpdated,
+  searchQuery,
+  setSearchQuery,
+  onExport,
+}) {
+  const current = TAB_TITLES[activeTab] || TAB_TITLES.dashboard;
+
   return (
-    <header className="top-header">
-      <div className="header-left">
-        {/* Version Badge */}
-        <div className="header-version-badge">
-          <span className="text-cyan font-semibold">v0.2.0</span>
-          <span className="text-dim">|</span>
-          <span className="text-green">{wsConnected ? 'A2A-RPC ACTIVE' : 'DISCONNECTED'}</span>
-        </div>
-
-        {/* Profile Bar */}
-        <div className="header-profile-bar">
-          <span className="material-symbols-outlined">travel_explore</span>
-          <span className="header-profile-text">Profile: OpenAI, Anthropic, Groq, Mistral, Together, Pinecone</span>
-        </div>
-
-        {/* Live Indicators */}
-        <div className="header-indicators">
-          <span className="indicator">
-            <span className={`indicator-dot ${wsConnected ? 'green' : 'amber'}`}></span>
-            {wsConnected ? '6/6 HEALTHY' : 'CHECKING...'}
-          </span>
-          <span className="indicator">
-            <span className={`indicator-dot ${wsConnected ? 'cyan' : 'amber'}`}></span>
-            {wsConnected ? 'STREAM CONNECTED' : 'STREAM PENDING'}
-          </span>
+    <header className="top-bar">
+      <div className="top-bar-left">
+        <div>
+          <h1 className="page-title">{current.title}</h1>
+          <p className="page-subtitle">{current.subtitle}</p>
         </div>
       </div>
 
-      <div className="header-right">
-        {/* Mode Selector */}
-        <select
+      <div className="top-bar-center">
+        <div className="search-bar">
+          <span className="material-symbols-outlined search-icon">search</span>
+          <input
+            type="text"
+            placeholder="Search models, companies, or pricing..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="clear-search-btn" onClick={() => setSearchQuery('')}>
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="top-bar-right">
+        {lastUpdated && (
+          <span className="last-updated-badge">
+            <span className="material-symbols-outlined">schedule</span>
+            <span>{lastUpdated}</span>
+          </span>
+        )}
+
+        <button
           className="btn btn-secondary"
-          value={pipelineMode}
-          onChange={e => setPipelineMode(e.target.value)}
-          style={{ cursor: 'pointer', appearance: 'auto', paddingRight: 'var(--space-md)' }}
+          onClick={onExport}
+          title="Export CSV of current pricing data"
+          type="button"
         >
-          <option value="in_process">In-Process</option>
-          <option value="remote">Remote A2A</option>
-        </select>
-
-        <button className="btn btn-secondary" type="button">
-          <span className="material-symbols-outlined">terminal</span>
-          <span>API Docs</span>
-        </button>
-
-        <button className="btn btn-secondary" type="button">
-          <span className="material-symbols-outlined">picture_as_pdf</span>
-          <span>Export PDF</span>
+          <span className="material-symbols-outlined">download</span>
+          <span>Export CSV</span>
         </button>
 
         <button
-          className="btn btn-primary"
-          onClick={onTriggerPipeline}
+          className={`btn ${isRunning ? 'btn-scanning' : 'btn-primary'}`}
+          onClick={onTriggerScan}
           disabled={isRunning}
           type="button"
-          style={isRunning ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
         >
-          <span className="material-symbols-outlined">{isRunning ? 'sync' : 'play_arrow'}</span>
-          <span>{isRunning ? 'Running...' : 'Trigger Run'}</span>
+          <span className={`material-symbols-outlined ${isRunning ? 'spin' : ''}`}>
+            {isRunning ? 'sync' : 'bolt'}
+          </span>
+          <span>{isRunning ? 'Scanning Market...' : 'Scan Competitors'}</span>
         </button>
-
-        <div className="header-divider"></div>
-
-        <button className="btn-icon" type="button">
-          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>settings</span>
-        </button>
-
-        <div className="user-avatar">
-          <span className="material-symbols-outlined">person</span>
-        </div>
       </div>
     </header>
   );
