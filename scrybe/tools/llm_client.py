@@ -94,7 +94,7 @@ class LLMClient:
         elif provider == "anthropic":
             return self._call_anthropic(prompt, model, system_prompt, temperature, max_tokens)
         elif provider == "google":
-            return self._call_google(prompt, model, temperature, max_tokens)
+            return self._call_google(prompt, model, system_prompt, temperature, max_tokens, json_mode)
         else:
             raise ValueError(f"Unknown provider for model: {model}")
 
@@ -138,7 +138,13 @@ class LLMClient:
         return response.content[0].text if response.content else ""
 
     def _call_google(
-        self, prompt: str, model: str, temperature: float, max_tokens: int,
+        self,
+        prompt: str,
+        model: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 4096,
+        json_mode: bool = True,
     ) -> str:
         try:
             import google.generativeai as genai
@@ -146,11 +152,28 @@ class LLMClient:
             raise RuntimeError("google-generativeai not installed. Run: pip install google-generativeai")
 
         genai.configure(api_key=self.google_api_key)
-        genai_model = genai.GenerativeModel(model)
+        clean_model = model.replace("models/", "")
+        
+        gen_kwargs: Dict[str, Any] = {}
+        if system_prompt:
+            gen_kwargs["system_instruction"] = system_prompt
 
-        config = genai.types.GenerationConfig(
-            temperature=temperature,
-            max_output_tokens=max_tokens,
-        )
-        response = genai_model.generate_content(prompt, generation_config=config)
-        return response.text or ""
+        genai_model = genai.GenerativeModel(clean_model, **gen_kwargs)
+
+        config_args: Dict[str, Any] = {
+            "temperature": temperature,
+            "max_output_tokens": max_tokens,
+        }
+        if json_mode:
+            config_args["response_mime_type"] = "application/json"
+
+        try:
+            config = genai.types.GenerationConfig(**config_args)
+            response = genai_model.generate_content(prompt, generation_config=config)
+            return response.text or ""
+        except Exception:
+            # Retry without response_mime_type if model or version rejects it
+            config_args.pop("response_mime_type", None)
+            config = genai.types.GenerationConfig(**config_args)
+            response = genai_model.generate_content(prompt, generation_config=config)
+            return response.text or ""
