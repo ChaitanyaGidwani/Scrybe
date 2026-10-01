@@ -17,7 +17,7 @@ function getAgentState(agentStates, agentName) {
   return null;
 }
 
-export default function AgentTopology({ agentStates, onSelectAgent, activePipelineStage }) {
+export default function AgentTopology({ agentStates, onSelectAgent, activePipelineStage, onTriggerPipeline, isRunning }) {
   return (
     <section>
       <div className="card-elevated">
@@ -32,15 +32,21 @@ export default function AgentTopology({ agentStates, onSelectAgent, activePipeli
             <p className="section-subtitle">Real-time state machine routing requests from pre-flight legal gating to multi-channel corroboration & publishing.</p>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-xs)' }}>
-            <button className="btn btn-primary">
-              <span className="material-symbols-outlined">bolt</span>
-              <span>Trigger Autonomous Run</span>
+            <button
+              className="btn btn-primary"
+              onClick={onTriggerPipeline}
+              disabled={isRunning}
+              type="button"
+              style={isRunning ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+            >
+              <span className="material-symbols-outlined">{isRunning ? 'sync' : 'bolt'}</span>
+              <span>{isRunning ? 'Swarm Running...' : 'Trigger Autonomous Run'}</span>
             </button>
-            <button className="btn btn-secondary">
+            <button className="btn btn-secondary" type="button">
               <span className="material-symbols-outlined">travel_explore</span>
               <span>Inspect FAISS Index</span>
             </button>
-            <button className="btn btn-ghost">
+            <button className="btn btn-ghost" type="button">
               <span className="material-symbols-outlined">pause</span>
               <span>Pause Stream</span>
             </button>

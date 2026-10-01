@@ -249,6 +249,8 @@ export default function App() {
                 agentStates={agentStates}
                 onSelectAgent={setSelectedAgentModal}
                 activePipelineStage={activePipelineStage}
+                onTriggerPipeline={handleTriggerPipeline}
+                isRunning={isRunning}
               />
 
               {/* Two Column: Terminal + Delta Alerts */}
