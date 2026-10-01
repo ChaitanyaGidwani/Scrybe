@@ -177,6 +177,38 @@ export default function DashboardView({
         </div>
       </div>
 
+      {/* ── Spotlight: Final Market Verdict ── */}
+      <div className="verdict-spotlight-card">
+        <div className="spotlight-left">
+          <div className="spotlight-badge">
+            <span className="material-symbols-outlined">gavel</span>
+            <span>FINAL MARKET VERDICT</span>
+          </div>
+          <h3 className="spotlight-title">
+            Optimal Strategy: 3-Tier Multi-Model Routing Saves Up to 78% on Monthly Tokens
+          </h3>
+          <p className="spotlight-desc">
+            Based on current pricing benchmarks across OpenAI, Anthropic, Mistral, and Groq, single-model architectures
+            overpay by 3x–4x. Routing reasoning to Claude 3.5 Sonnet (with prompt caching), utility triage to GPT-4o mini,
+            and real-time voice to Groq LPU maximizes performance while protecting margins.
+          </p>
+        </div>
+        <div className="spotlight-right">
+          <div className="spotlight-stat-box">
+            <span className="spotlight-stat-val">-78%</span>
+            <span className="spotlight-stat-label">Spend Reduction</span>
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={() => setActiveTab('verdict')}
+            type="button"
+          >
+            <span className="material-symbols-outlined">calculate</span>
+            <span>Explore Verdict & Calculator</span>
+          </button>
+        </div>
+      </div>
+
       {/* ── Two Column: Market Spotlight & Flagship Comparison ── */}
       <div className="split-grid">
         {/* Left: Key Market Shifts */}

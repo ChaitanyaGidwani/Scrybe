@@ -4,6 +4,7 @@ import TopHeader from './components/TopHeader';
 import DashboardView from './components/DashboardView';
 import MatrixView from './components/MatrixView';
 import StrategicView from './components/StrategicView';
+import VerdictView from './components/VerdictView';
 import ReportsView from './components/ReportsView';
 import CompetitorsView from './components/CompetitorsView';
 
@@ -267,6 +268,12 @@ export default function App() {
           {activeTab === 'strategy' && (
             <StrategicView
               insights={strategicInsights}
+              records={matrixRecords}
+            />
+          )}
+
+          {activeTab === 'verdict' && (
+            <VerdictView
               records={matrixRecords}
             />
           )}
