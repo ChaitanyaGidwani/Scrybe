@@ -1,87 +1,263 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 
-export default function MatrixView({ records, pipelineId, onRefresh }) {
+export default function MatrixView({ records, onRefresh, searchQuery = '' }) {
+  const [selectedCompany, setSelectedCompany] = useState('ALL');
+  const [localSearch, setLocalSearch] = useState('');
+  const [sortBy, setSortBy] = useState('input_asc');
+
+  // Flatten all pricing tiers with company info
+  const allRows = useMemo(() => {
+    const rows = [];
+    (records || []).forEach((rec) => {
+      const company = rec.company_name || 'Unknown';
+      const product = rec.product_name || 'AI Platform';
+      const sourceUrl = rec.source_url || '';
+
+      (rec.pricing_tiers || []).forEach((tier) => {
+        rows.push({
+          company,
+          product,
+          sourceUrl,
+          modelName: tier.model_name || tier.tier_name || 'Standard Tier',
+          inputPrice: tier.input_price_per_1m != null ? Number(tier.input_price_per_1m) : null,
+          outputPrice: tier.output_price_per_1m != null ? Number(tier.output_price_per_1m) : null,
+          cachePrice: tier.cache_price_per_1m != null ? Number(tier.cache_price_per_1m) : null,
+          contextWindow: tier.context_window || null,
+        });
+      });
+    });
+    return rows;
+  }, [records]);
+
+  // List of unique companies for filter tabs
+  const companies = useMemo(() => {
+    const set = new Set();
+    allRows.forEach((r) => set.add(r.company));
+    return ['ALL', ...Array.from(set)];
+  }, [allRows]);
+
+  // Combined search term
+  const activeSearch = (searchQuery || localSearch).trim().toLowerCase();
+
+  // Filtered & sorted rows
+  const filteredRows = useMemo(() => {
+    let list = allRows;
+
+    if (selectedCompany !== 'ALL') {
+      list = list.filter((r) => r.company.toLowerCase() === selectedCompany.toLowerCase());
+    }
+
+    if (activeSearch) {
+      list = list.filter(
+        (r) =>
+          r.company.toLowerCase().includes(activeSearch) ||
+          r.modelName.toLowerCase().includes(activeSearch) ||
+          r.product.toLowerCase().includes(activeSearch)
+      );
+    }
+
+    // Sort
+    return [...list].sort((a, b) => {
+      if (sortBy === 'input_asc') {
+        if (a.inputPrice == null) return 1;
+        if (b.inputPrice == null) return -1;
+        return a.inputPrice - b.inputPrice;
+      }
+      if (sortBy === 'input_desc') {
+        if (a.inputPrice == null) return 1;
+        if (b.inputPrice == null) return -1;
+        return b.inputPrice - a.inputPrice;
+      }
+      if (sortBy === 'output_asc') {
+        if (a.outputPrice == null) return 1;
+        if (b.outputPrice == null) return -1;
+        return a.outputPrice - b.outputPrice;
+      }
+      if (sortBy === 'name') {
+        return a.modelName.localeCompare(b.modelName);
+      }
+      return 0;
+    });
+  }, [allRows, selectedCompany, activeSearch, sortBy]);
+
+  // Export CSV
+  const handleExportCSV = () => {
+    if (filteredRows.length === 0) return;
+    const headers = ['Company', 'Product', 'Model', 'Input Price ($/1M)', 'Output Price ($/1M)', 'Cache Price ($/1M)', 'Context Window'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredRows.map((r) =>
+        [
+          `"${r.company}"`,
+          `"${r.product}"`,
+          `"${r.modelName}"`,
+          r.inputPrice != null ? r.inputPrice : '',
+          r.outputPrice != null ? r.outputPrice : '',
+          r.cachePrice != null ? r.cachePrice : '',
+          r.contextWindow || '',
+        ].join(',')
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `scrybe_pricing_matrix_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <section>
-      <div className="card-elevated">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 'var(--space-md)', flexWrap: 'wrap', gap: 'var(--space-sm)' }}>
-          <div className="section-header">
-            <span className="section-overline">Pricing Intelligence Matrix</span>
-            <h2 className="section-title" style={{ fontWeight: 700 }}>Competitive Pricing & Feature Grid</h2>
-            <p className="section-subtitle">Extracted, normalized ($/1M tokens), and DOM-grounded from live competitor pricing pages.</p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-            {pipelineId && <span className="badge badge-cyan">Pipeline: {pipelineId}</span>}
-            <button className="btn btn-secondary" onClick={onRefresh}>
-              <span className="material-symbols-outlined">refresh</span>
-              <span>Refresh</span>
-            </button>
+    <div className="card">
+      {/* ── Table Header Controls ── */}
+      <div className="table-controls-bar">
+        <div className="table-filters-left">
+          {/* Company filter chips */}
+          <div className="filter-chips">
+            {companies.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={`filter-chip ${selectedCompany === c ? 'active' : ''}`}
+                onClick={() => setSelectedCompany(c)}
+              >
+                {c === 'ALL' ? 'All Providers' : c}
+              </button>
+            ))}
           </div>
         </div>
 
-        {records && records.length > 0 ? (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>COMPANY</th>
-                  <th>PRODUCT</th>
-                  <th>TIER / MODEL</th>
-                  <th style={{ textAlign: 'right' }}>INPUT $/1M</th>
-                  <th style={{ textAlign: 'right' }}>OUTPUT $/1M</th>
-                  <th style={{ textAlign: 'right' }}>CACHE $/1M</th>
-                  <th style={{ textAlign: 'right' }}>CONTEXT</th>
-                  <th>CONFIDENCE</th>
-                  <th>SOURCE</th>
-                </tr>
-              </thead>
-              <tbody>
-                {records.map((rec, i) => {
-                  const tiers = rec.pricing_tiers || [];
-                  if (tiers.length === 0) {
-                    return (
-                      <tr key={i}>
-                        <td style={{ fontWeight: 600 }}>{rec.company_name}</td>
-                        <td>{rec.product_name || '—'}</td>
-                        <td colSpan={7} className="text-muted">No tiers extracted</td>
-                      </tr>
-                    );
-                  }
-                  return tiers.map((tier, j) => (
-                    <tr key={`${i}-${j}`}>
-                      {j === 0 && <td rowSpan={tiers.length} style={{ fontWeight: 600, verticalAlign: 'top', borderRight: '1px solid rgba(255,255,255,0.04)' }}>{rec.company_name}</td>}
-                      {j === 0 && <td rowSpan={tiers.length} className="text-muted" style={{ verticalAlign: 'top' }}>{rec.product_name || '—'}</td>}
-                      <td className="text-cyan">{tier.model_name || tier.tier_name || '—'}</td>
-                      <td className="numeric">{tier.input_price_per_1m != null ? `$${tier.input_price_per_1m}` : '—'}</td>
-                      <td className="numeric">{tier.output_price_per_1m != null ? `$${tier.output_price_per_1m}` : '—'}</td>
-                      <td className="numeric text-muted">{tier.cache_price_per_1m != null ? `$${tier.cache_price_per_1m}` : '—'}</td>
-                      <td className="numeric text-muted">{tier.context_window ? `${(tier.context_window / 1000).toFixed(0)}K` : '—'}</td>
-                      {j === 0 && (
-                        <td rowSpan={tiers.length} style={{ verticalAlign: 'top' }}>
-                          <span className={`badge ${(rec.extraction_confidence || 0) >= 0.9 ? 'badge-green' : (rec.extraction_confidence || 0) >= 0.6 ? 'badge-cyan' : 'badge-amber'}`}>
-                            {((rec.extraction_confidence || 0) * 100).toFixed(0)}%
-                          </span>
-                        </td>
-                      )}
-                      {j === 0 && (
-                        <td rowSpan={tiers.length} className="text-muted truncate" style={{ verticalAlign: 'top', maxWidth: 180 }}>
-                          {rec.source_url ? new URL(rec.source_url).hostname : '—'}
-                        </td>
-                      )}
-                    </tr>
-                  ));
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--outline)' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 48, display: 'block', marginBottom: 'var(--space-sm)' }}>table_chart</span>
-            <p className="text-body-lg">No pricing data extracted yet.</p>
-            <p className="text-body-sm text-muted">Trigger a pipeline run to crawl and extract competitor pricing.</p>
-          </div>
-        )}
+        <div className="table-filters-right">
+          {/* Search within table */}
+          {!searchQuery && (
+            <div className="search-bar table-search">
+              <span className="material-symbols-outlined search-icon">search</span>
+              <input
+                type="text"
+                placeholder="Filter models..."
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+              />
+            </div>
+          )}
+
+          {/* Sort selector */}
+          <select
+            className="filter-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="input_asc">Sort: Lowest Input Price</option>
+            <option value="input_desc">Sort: Highest Input Price</option>
+            <option value="output_asc">Sort: Lowest Output Price</option>
+            <option value="name">Sort: Model Name</option>
+          </select>
+
+          <button
+            className="btn btn-secondary"
+            onClick={handleExportCSV}
+            title="Export filtered records as CSV"
+            type="button"
+          >
+            <span className="material-symbols-outlined">download</span>
+            <span>CSV</span>
+          </button>
+
+          <button
+            className="btn btn-secondary btn-icon-only"
+            onClick={onRefresh}
+            title="Refresh pricing table"
+            type="button"
+          >
+            <span className="material-symbols-outlined">refresh</span>
+          </button>
+        </div>
       </div>
-    </section>
+
+      {/* ── Pricing Matrix Table ── */}
+      {filteredRows.length > 0 ? (
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th style={{ width: '22%' }}>PROVIDER</th>
+                <th style={{ width: '26%' }}>MODEL / TIER</th>
+                <th style={{ width: '13%', textAlign: 'right' }}>INPUT / 1M</th>
+                <th style={{ width: '13%', textAlign: 'right' }}>OUTPUT / 1M</th>
+                <th style={{ width: '13%', textAlign: 'right' }}>CACHE / 1M</th>
+                <th style={{ width: '13%', textAlign: 'right' }}>CONTEXT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRows.map((row, i) => (
+                <tr key={i}>
+                  <td className="company-cell">
+                    <span className="company-avatar">{row.company.charAt(0)}</span>
+                    <div>
+                      <div className="company-name">{row.company}</div>
+                      <div className="company-product">{row.product}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="model-name-cell">
+                      <span className="model-primary-name">{row.modelName}</span>
+                    </div>
+                  </td>
+                  <td className="mono" style={{ textAlign: 'right' }}>
+                    {row.inputPrice != null ? (
+                      <span className="price-tag input-price">${row.inputPrice.toFixed(row.inputPrice < 0.01 ? 4 : 2)}</span>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
+                  <td className="mono" style={{ textAlign: 'right' }}>
+                    {row.outputPrice != null ? (
+                      <span className="price-tag output-price">${row.outputPrice.toFixed(row.outputPrice < 0.01 ? 4 : 2)}</span>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
+                  <td className="mono text-muted" style={{ textAlign: 'right' }}>
+                    {row.cachePrice != null ? `$${row.cachePrice.toFixed(2)}` : '—'}
+                  </td>
+                  <td className="mono text-muted" style={{ textAlign: 'right' }}>
+                    {row.contextWindow ? (
+                      <span className="badge badge-purple">{`${(row.contextWindow / 1000).toFixed(0)}K`}</span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="empty-state">
+          <div className="empty-icon">
+            <span className="material-symbols-outlined">search_off</span>
+          </div>
+          <h4 className="empty-title">No matching pricing models found</h4>
+          <p className="empty-desc">
+            {allRows.length === 0
+              ? 'Run a market scan to fetch current competitor rates.'
+              : 'Try clearing your search query or provider filter.'}
+          </p>
+        </div>
+      )}
+
+      {/* Footer count indicator */}
+      {filteredRows.length > 0 && (
+        <div className="table-footer-bar">
+          <span className="text-muted" style={{ fontSize: 13 }}>
+            Showing <strong>{filteredRows.length}</strong> of <strong>{allRows.length}</strong> tracked model tiers
+          </span>
+          <span className="text-muted" style={{ fontSize: 12 }}>
+            Normalized to standard USD ($) per 1 Million tokens
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
