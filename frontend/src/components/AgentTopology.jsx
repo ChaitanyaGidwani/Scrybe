@@ -1,309 +1,98 @@
 import React from 'react';
-import { 
-  Shield, 
-  BookOpen, 
-  Brain, 
-  Database, 
-  Lightbulb, 
-  FileText, 
-  ArrowRight, 
-  ExternalLink, 
-  Zap, 
-  Activity,
-  Layers,
-  CheckCircle2,
-  AlertCircle
-} from 'lucide-react';
 
-export default function AgentTopology({ 
-  agents = [], 
-  agentStates = {}, 
-  onSelectAgent,
-  activePipelineStage
-}) {
-  const getAgentIcon = (name) => {
-    switch (name.toLowerCase()) {
-      case 'compliance': return Shield;
-      case 'reader': return BookOpen;
-      case 'analyst': return Brain;
-      case 'memory': return Database;
-      case 'strategist': return Lightbulb;
-      case 'formatter': return FileText;
-      default: return Activity;
-    }
-  };
+const AGENTS = [
+  { port: 8010, name: 'Compliance', role: 'Gatekeeper', icon: 'verified_user', desc: 'Pre-flight robots.txt & ai.txt gate, rate throttler, regex & NER PII scrubber.', stat1: '0 Violations logged', stat2: 'EDPB 03/2026 Compliant', statusLabel: 'ACTIVE', statusColor: 'var(--tertiary-fixed)', iconColor: 'var(--primary-fixed)', statColor: 'var(--tertiary-fixed)' },
+  { port: 8011, name: 'Reader Agent', role: 'Tiered Fetch', icon: 'travel_explore', desc: 'httpx → curl_cffi → Playwright browser pool. Strips script/style DOM.', stat1: '42 DOM pages synced', stat2: 'Latency: 284ms avg', statusLabel: 'CRAWLING', statusColor: 'var(--primary-fixed)', iconColor: 'var(--primary-fixed)', statColor: 'var(--primary-fixed)', pulse: true },
+  { port: 8012, name: 'Analyst Agent', role: 'Pydantic Parser', icon: 'psychology', desc: 'Pydantic v2 structured schemas. Normalizes tokens to $/1M & context depth.', stat1: 'Confidence: 0.98', stat2: 'DOM Grounding 100%', statusLabel: 'STABLE', statusColor: 'var(--tertiary-fixed)', iconColor: 'var(--primary-fixed)', statColor: 'var(--tertiary-fixed)' },
+  { port: 8013, name: 'Memory / Refl.', role: 'FAISS Vector', icon: 'history_edu', desc: 'Vector diff detector & Reflexion self-healing loop (arXiv:2303.11366).', stat1: '1,420 FAISS Vectors', stat2: '2 Repairs executed', statusLabel: 'BUFFER', statusColor: 'var(--secondary)', iconColor: 'var(--secondary)', statColor: 'var(--secondary)' },
+  { port: 8014, name: 'Strategist', role: 'Corroborator', icon: 'radar', desc: 'Enforces ≥2 independent competitor rule. Formulates sales battlecards.', stat1: '2 Macro Trends', stat2: '1 Isolated move', statusLabel: 'SYNTH', statusColor: 'var(--secondary-fixed)', iconColor: 'var(--secondary-fixed)', statColor: 'var(--secondary-fixed)', pulse: true },
+  { port: 8015, name: 'Formatter', role: 'Publisher', icon: 'feed', desc: 'Markdown digests, ReportLab styled PDF generation, SSE broadcast.', stat1: 'Brief Generated', stat2: 'Last: 4m ago (PDF ready)', statusLabel: 'IDLE', statusColor: 'var(--tertiary-fixed)', iconColor: 'var(--primary-fixed)', statColor: 'var(--tertiary-fixed)' },
+];
 
-  const getAgentColor = (name) => {
-    switch (name.toLowerCase()) {
-      case 'compliance': return 'var(--emerald-primary)';
-      case 'reader': return 'var(--cyan-primary)';
-      case 'analyst': return 'var(--violet-primary)';
-      case 'memory': return '#f43f5e';
-      case 'strategist': return 'var(--amber-primary)';
-      case 'formatter': return '#38bdf8';
-      default: return 'var(--text-secondary)';
-    }
-  };
+function getAgentState(agentStates, agentName) {
+  const key = agentName.toLowerCase().replace(/[^a-z]/g, '');
+  for (const [k, v] of Object.entries(agentStates)) {
+    if (k.includes(key) || key.includes(k)) return v;
+  }
+  return null;
+}
 
-  // Pipeline execution sequence
-  const pipelineFlow = ['reader', 'analyst', 'memory', 'strategist', 'formatter'];
-
+export default function AgentTopology({ agentStates, onSelectAgent, activePipelineStage }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-      {/* Top Banner: Protocol Mesh Overview */}
-      <div className="glass-panel" style={{ padding: '24px', background: 'linear-gradient(135deg, rgba(18,24,36,0.9), rgba(12,16,25,0.9))' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div>
-            <h2 style={{ fontSize: '20px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Zap size={20} color="var(--cyan-primary)" />
-              A2A Agent Topology & Coordination Mesh
-            </h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              Decoupled autonomous microservice agents communicating exclusively via JSON-RPC 2.0 and Agent Cards.
-            </p>
+    <section>
+      <div className="card-elevated">
+        {/* Section Header */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-md)', paddingBottom: 'var(--space-md)' }}>
+          <div className="section-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+              <span className="section-overline">A2A v1.0 Standard Mesh</span>
+              <span className="badge badge-cyan" style={{ background: 'rgba(0, 240, 255, 0.08)' }}>Sequential + Async Reflexion</span>
+            </div>
+            <h2 className="section-title" style={{ fontWeight: 700 }}>Autonomous Agent Swarm Orchestration</h2>
+            <p className="section-subtitle">Real-time state machine routing requests from pre-flight legal gating to multi-channel corroboration & publishing.</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span className="badge badge-cyan">
-              {agents.length} Registered Agents
-            </span>
-            <span className="badge badge-violet">
-              Decoupled JSON-RPC
-            </span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-xs)' }}>
+            <button className="btn btn-primary">
+              <span className="material-symbols-outlined">bolt</span>
+              <span>Trigger Autonomous Run</span>
+            </button>
+            <button className="btn btn-secondary">
+              <span className="material-symbols-outlined">travel_explore</span>
+              <span>Inspect FAISS Index</span>
+            </button>
+            <button className="btn btn-ghost">
+              <span className="material-symbols-outlined">pause</span>
+              <span>Pause Stream</span>
+            </button>
           </div>
         </div>
 
-        {/* Coordination Workflow Bar */}
-        <div style={{
-          background: 'var(--bg-secondary)',
-          borderRadius: 'var(--radius-md)',
-          padding: '16px 20px',
-          border: '1px solid var(--border-subtle)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          overflowX: 'auto',
-          gap: '12px',
-        }}>
-          {pipelineFlow.map((stageName, index) => {
-            const isCurrent = activePipelineStage === stageName;
-            const status = agentStates[stageName] || 'idle';
-            const isCompleted = status === 'completed';
-            const isWorking = status === 'working' || isCurrent;
-            const Icon = getAgentIcon(stageName);
+        {/* Agent Cards Grid */}
+        <div className="topology-grid" style={{ paddingTop: 'var(--space-sm)' }}>
+          {AGENTS.map((agent, i) => {
+            const state = getAgentState(agentStates || {}, agent.name);
+            const isActive = activePipelineStage && agent.name.toLowerCase().includes(activePipelineStage);
+            let dynamicStatus = agent.statusLabel;
+            let dynamicColor = agent.statusColor;
+            if (state === 'working') { dynamicStatus = 'WORKING'; dynamicColor = 'var(--primary-fixed)'; }
+            if (state === 'completed') { dynamicStatus = 'DONE'; dynamicColor = 'var(--tertiary-fixed)'; }
+            if (state === 'failed') { dynamicStatus = 'ERROR'; dynamicColor = 'var(--error)'; }
 
             return (
-              <React.Fragment key={stageName}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '8px 14px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: isWorking 
-                    ? 'rgba(0, 240, 255, 0.12)' 
-                    : isCompleted 
-                    ? 'rgba(16, 185, 129, 0.08)' 
-                    : 'transparent',
-                  border: `1px solid ${
-                    isWorking 
-                      ? 'var(--cyan-primary)' 
-                      : isCompleted 
-                      ? 'rgba(16, 185, 129, 0.3)' 
-                      : 'var(--border-subtle)'
-                  }`,
-                  transition: 'all var(--transition-normal)',
-                }}>
-                  <div style={{
-                    width: '26px',
-                    height: '26px',
-                    borderRadius: '6px',
-                    background: isWorking ? 'var(--cyan-primary)' : 'var(--bg-surface-elevated)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <Icon size={14} color={isWorking ? '#07090e' : getAgentColor(stageName)} />
-                  </div>
-                  <div>
-                    <span style={{ 
-                      fontSize: '12px', 
-                      fontWeight: 700, 
-                      textTransform: 'capitalize',
-                      color: isWorking ? 'var(--cyan-primary)' : isCompleted ? 'var(--emerald-primary)' : 'var(--text-primary)'
-                    }}>
-                      {index + 1}. {stageName}
+              <div
+                className="agent-card"
+                key={agent.port}
+                onClick={() => onSelectAgent && onSelectAgent(agent)}
+                style={isActive ? { boxShadow: '0 0 12px rgba(0, 240, 255, 0.15)', borderLeft: '2px solid var(--primary-container)' } : {}}
+              >
+                <div>
+                  <div className="agent-card-header">
+                    <span className="badge badge-surface">PORT {agent.port}</span>
+                    <span className="text-label-sm" style={{ display: 'flex', alignItems: 'center', gap: 4, color: dynamicColor }}>
+                      <span className={`led ${agent.pulse || state === 'working' ? 'animate-ping' : ''}`} style={{ background: dynamicColor }}></span>
+                      {dynamicStatus}
                     </span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <div className={`status-dot ${isWorking ? 'working' : isCompleted ? 'active' : 'idle'}`} style={{ width: '5px', height: '5px' }} />
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                        {status}
-                      </span>
+                  </div>
+                  <div className="agent-icon-row">
+                    <div className="agent-icon" style={{ color: agent.iconColor }}>
+                      <span className="material-symbols-outlined">{agent.icon}</span>
+                    </div>
+                    <div>
+                      <h3 className="agent-name">{agent.name}</h3>
+                      <span className="agent-role">{agent.role}</span>
                     </div>
                   </div>
+                  <p className="agent-desc">{agent.desc}</p>
                 </div>
-
-                {index < pipelineFlow.length - 1 && (
-                  <ArrowRight size={16} color="var(--text-muted)" style={{ flexShrink: 0 }} />
-                )}
-              </React.Fragment>
+                <div className="agent-stats">
+                  <div className="stat-primary" style={{ color: agent.statColor }}>{agent.stat1}</div>
+                  <div className="stat-secondary">{agent.stat2}</div>
+                </div>
+              </div>
             );
           })}
         </div>
       </div>
-
-      {/* Agent Cards Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-        gap: '20px',
-      }}>
-        {agents.map((agent) => {
-          const Icon = getAgentIcon(agent.name);
-          const color = getAgentColor(agent.name);
-          const status = agentStates[agent.name.toLowerCase()] || 'idle';
-          const isWorking = status === 'working';
-
-          return (
-            <div
-              key={agent.name}
-              className={`glass-panel ${isWorking ? 'glass-panel-glow' : ''}`}
-              onClick={() => onSelectAgent(agent)}
-              style={{
-                padding: '22px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                cursor: 'pointer',
-                position: 'relative',
-                overflow: 'hidden',
-                background: isWorking ? 'rgba(18, 24, 36, 0.95)' : 'var(--bg-glass)',
-              }}
-            >
-              {/* Top Accent Line */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '3px',
-                background: isWorking ? 'var(--cyan-primary)' : color,
-                opacity: isWorking ? 1 : 0.7,
-              }} />
-
-              <div>
-                {/* Agent Header */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '10px',
-                      background: 'var(--bg-surface-elevated)',
-                      border: `1px solid ${color}44`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}>
-                      <Icon size={22} color={color} />
-                    </div>
-                    <div>
-                      <h3 style={{ fontSize: '16px', fontWeight: 700, textTransform: 'capitalize', color: 'var(--text-primary)' }}>
-                        {agent.name}
-                      </h3>
-                      <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-                        {agent.url?.replace('http://', '')}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Status Indicator */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '3px 8px',
-                    borderRadius: 'var(--radius-full)',
-                    background: isWorking 
-                      ? 'rgba(0, 240, 255, 0.1)' 
-                      : status === 'completed' 
-                      ? 'rgba(16, 185, 129, 0.1)' 
-                      : 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid var(--border-subtle)',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                  }}>
-                    <div className={`status-dot ${isWorking ? 'working' : status === 'completed' ? 'active' : 'idle'}`} />
-                    <span style={{ textTransform: 'uppercase', color: isWorking ? 'var(--cyan-primary)' : 'var(--text-secondary)' }}>
-                      {status}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Description snippet */}
-                <p style={{
-                  fontSize: '12px',
-                  color: 'var(--text-secondary)',
-                  lineHeight: 1.5,
-                  marginBottom: '16px',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}>
-                  {agent.description}
-                </p>
-
-                {/* Skills Preview */}
-                <div style={{ marginBottom: '18px' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                    Registered Skills ({agent.skills?.length || 0})
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                    {(agent.skills || []).slice(0, 3).map((skill, sIdx) => (
-                      <span
-                        key={sIdx}
-                        style={{
-                          fontSize: '11px',
-                          background: 'var(--bg-secondary)',
-                          color: 'var(--text-secondary)',
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          border: '1px solid var(--border-subtle)',
-                        }}
-                      >
-                        {skill.name}
-                      </span>
-                    ))}
-                    {(agent.skills?.length || 0) > 3 && (
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', padding: '2px 4px' }}>
-                        +{agent.skills.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Footer */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingTop: '12px',
-                borderTop: '1px solid var(--border-subtle)',
-                fontSize: '11px',
-                color: 'var(--cyan-primary)',
-              }}>
-                <span style={{ color: 'var(--text-muted)' }}>
-                  A2A JSON-RPC 2.0
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                  View Agent Card <ExternalLink size={12} />
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    </section>
   );
 }

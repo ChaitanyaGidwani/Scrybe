@@ -1,241 +1,77 @@
 import React from 'react';
-import { X, Shield, BookOpen, Brain, Database, Lightbulb, FileText, CheckCircle2, Cpu, Terminal } from 'lucide-react';
 
 export default function AgentCardModal({ agent, onClose }) {
   if (!agent) return null;
 
-  const getAgentIcon = (name) => {
-    switch (name.toLowerCase()) {
-      case 'compliance': return Shield;
-      case 'reader': return BookOpen;
-      case 'analyst': return Brain;
-      case 'memory': return Database;
-      case 'strategist': return Lightbulb;
-      case 'formatter': return FileText;
-      default: return Cpu;
-    }
-  };
-
-  const Icon = getAgentIcon(agent.name);
-
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 100,
-      background: 'rgba(7, 9, 14, 0.8)',
-      backdropFilter: 'blur(8px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px',
-    }}>
-      <div 
-        className="glass-panel"
-        style={{
-          width: '680px',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-accent)',
-          boxShadow: 'var(--shadow-lg), 0 0 30px rgba(0, 240, 255, 0.15)',
-          overflow: 'hidden',
-          borderRadius: 'var(--radius-lg)',
-        }}
-      >
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div style={{
-          padding: '18px 24px',
-          borderBottom: '1px solid var(--border-subtle)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'var(--bg-surface-elevated)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '10px',
-              background: 'rgba(0, 240, 255, 0.12)',
-              border: '1px solid rgba(0, 240, 255, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Icon size={22} color="var(--cyan-primary)" />
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, textTransform: 'capitalize' }}>
-                  {agent.name} Agent
-                </h3>
-                <span className="badge badge-cyan" style={{ fontSize: '10px' }}>
-                  {agent.protocol_version || 'A2A/1.0'}
-                </span>
-              </div>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                Endpoint: {agent.url}
-              </p>
-            </div>
+        <div className="modal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24, color: 'var(--primary-container)' }}>
+              {agent.icon || 'smart_toy'}
+            </span>
+            <h3 className="text-headline-md font-bold">{agent.name || 'Agent'}</h3>
           </div>
-
-          <button
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              color: 'var(--text-muted)',
-              padding: '6px',
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <X size={20} />
+          <button className="btn-icon" onClick={onClose}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>close</span>
           </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Agent Details */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+          {/* Role Badge + Port */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+            <span className="badge badge-surface">PORT {agent.port || '—'}</span>
+            <span className="badge badge-purple">{agent.role || 'Agent'}</span>
+            {agent.statusLabel && (
+              <span className="badge badge-green" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span className="led led-green" style={{ width: 6, height: 6 }}></span>
+                {agent.statusLabel}
+              </span>
+            )}
+          </div>
+
           {/* Description */}
-          <div>
-            <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-              Agent Purpose & Role
-            </h4>
-            <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
-              {agent.description}
-            </p>
-          </div>
+          <p className="text-body-md text-muted">
+            {agent.desc || agent.description || 'No description available.'}
+          </p>
 
-          {/* Capabilities */}
-          <div>
-            <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-              Capabilities & Interface
-            </h4>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              <span className="badge badge-violet">
-                JSON-RPC 2.0
-              </span>
-              <span className="badge badge-emerald">
-                Streaming: {agent.capabilities?.streaming ? 'Supported' : 'Standard'}
-              </span>
-              <span className="badge badge-cyan">
-                Stateful Tasks
-              </span>
-              <span className="badge badge-amber">
-                Input/Output Artifacts
-              </span>
+          {/* Stats Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-sm)' }}>
+            <div style={{ padding: 'var(--space-sm)', borderRadius: 'var(--radius-lg)', background: 'var(--surface-lowest)' }}>
+              <div className="text-label-sm text-muted" style={{ marginBottom: 4 }}>PRIMARY METRIC</div>
+              <div className="text-headline-sm font-semibold text-cyan">{agent.stat1 || '—'}</div>
+            </div>
+            <div style={{ padding: 'var(--space-sm)', borderRadius: 'var(--radius-lg)', background: 'var(--surface-lowest)' }}>
+              <div className="text-label-sm text-muted" style={{ marginBottom: 4 }}>SECONDARY METRIC</div>
+              <div className="text-headline-sm font-semibold text-green">{agent.stat2 || '—'}</div>
             </div>
           </div>
 
-          {/* Skills */}
-          <div>
-            <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-muted)', marginBottom: '10px' }}>
-              Registered A2A Skills ({agent.skills?.length || 0})
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {(agent.skills || []).map((skill, idx) => (
-                <div 
-                  key={idx}
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '12px 16px',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>
-                      {skill.name}
-                    </span>
-                    <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--cyan-primary)' }}>
-                      id: {skill.id}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                    {skill.description}
-                  </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {(skill.tags || []).map((tag, tIdx) => (
-                      <span key={tIdx} style={{
-                        fontSize: '10px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        color: 'var(--text-muted)',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                      }}>
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Sample JSON-RPC Message */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <Terminal size={14} color="var(--cyan-primary)" />
-              <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-muted)' }}>
-                A2A JSON-RPC 2.0 Interaction Spec
-              </h4>
-            </div>
-            <pre style={{
-              background: '#090c13',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '14px',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              color: '#38bdf8',
-              overflowX: 'auto',
-              lineHeight: 1.5,
-            }}>
+          {/* Agent Card / A2A Schema */}
+          <div style={{ padding: 'var(--space-md)', borderRadius: 'var(--radius-lg)', background: 'var(--surface-lowest)' }}>
+            <div className="text-label-sm text-muted" style={{ marginBottom: 'var(--space-sm)' }}>A2A AGENT CARD (JSON-RPC 2.0)</div>
+            <pre className="text-code" style={{ color: 'var(--on-surface)', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
 {JSON.stringify({
-  jsonrpc: "2.0",
-  id: "req_demo_001",
-  method: "agent/sendMessage",
-  params: {
-    message: {
-      role: "user",
-      parts: [
-        {
-          type: "data",
-          data: { action: agent.skills?.[0]?.id || "execute" }
-        }
-      ]
-    }
-  }
+  name: agent.name,
+  port: agent.port,
+  role: agent.role,
+  protocol: 'JSON-RPC 2.0',
+  capabilities: ['tasks/send', 'tasks/get', 'tasks/cancel'],
+  status: agent.statusLabel || 'unknown',
 }, null, 2)}
             </pre>
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{
-          padding: '14px 24px',
-          borderTop: '1px solid var(--border-subtle)',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          background: 'var(--bg-surface-elevated)',
-        }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '7px 18px',
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-medium)',
-              borderRadius: 'var(--radius-sm)',
-              color: 'var(--text-primary)',
-              fontSize: '12px',
-              fontWeight: 600,
-            }}
-          >
-            Close Agent Card
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-sm)', paddingTop: 'var(--space-xs)' }}>
+          <button className="btn btn-ghost" onClick={onClose}>Close</button>
+          <button className="btn btn-primary">
+            <span className="material-symbols-outlined">terminal</span>
+            Inspect RPC
           </button>
         </div>
       </div>

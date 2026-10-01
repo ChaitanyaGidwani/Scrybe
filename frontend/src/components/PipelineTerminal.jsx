@@ -1,241 +1,125 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Terminal, Shield, Play, CheckCircle2, AlertTriangle, ArrowDown, Trash2, Filter, Clock } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
 
-export default function PipelineTerminal({ 
-  events = [], 
-  isRunning = false, 
-  activeStage = null,
-  pipelineId = null,
-  onClear
-}) {
-  const [filterAgent, setFilterAgent] = useState('all');
-  const [selectedEvent, setSelectedEvent] = useState(null);
+function getAgentTagClass(agent) {
+  const a = (agent || '').toLowerCase();
+  if (a.includes('compliance') || a.includes('orchestrator') || a.includes('pipeline')) return 'cyan';
+  if (a.includes('reader') || a.includes('analyst') || a.includes('formatter')) return 'cyan';
+  if (a.includes('memory') || a.includes('reflexion') || a.includes('strategist')) return 'purple';
+  return 'cyan';
+}
+
+function getEventBadge(event) {
+  const ev = (event || '').toLowerCase();
+  if (ev.includes('completed') || ev.includes('done') || ev.includes('pass')) return 'badge-green';
+  if (ev.includes('failed') || ev.includes('error')) return 'badge-red';
+  if (ev.includes('start') || ev.includes('working') || ev.includes('progress')) return 'badge-cyan';
+  if (ev.includes('flag') || ev.includes('warning') || ev.includes('isolated')) return 'badge-amber';
+  return 'badge-surface';
+}
+
+function formatTimestamp(ts) {
+  if (!ts) return '—';
+  try {
+    const d = new Date(ts);
+    return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  } catch {
+    return ts;
+  }
+}
+
+export default function PipelineTerminal({ events, isRunning, pipelineId, onClear }) {
+  const containerRef = useRef(null);
   const [autoScroll, setAutoScroll] = useState(true);
-  const logEndRef = useRef(null);
+  const [activeTermTab, setActiveTermTab] = useState('stream');
 
   useEffect(() => {
-    if (autoScroll && logEndRef.current) {
-      logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (autoScroll && containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [events, autoScroll]);
 
-  const filteredEvents = events.filter(e => {
-    if (filterAgent === 'all') return true;
-    return (e.agent || '').toLowerCase() === filterAgent.toLowerCase();
-  });
-
-  const getEventBadgeClass = (event) => {
-    const ev = (event.event || '').toLowerCase();
-    if (ev.includes('complete') || ev.includes('ok') || ev.includes('success')) return 'badge-emerald';
-    if (ev.includes('fail') || ev.includes('error') || ev.includes('block')) return 'badge-crimson';
-    if (ev.includes('start') || ev.includes('progress') || ev.includes('working')) return 'badge-cyan';
-    return 'badge-violet';
-  };
+  const filteredEvents = events.slice(-200);
 
   return (
-    <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className="terminal-container">
       {/* Terminal Header */}
-      <div style={{
-        padding: '14px 20px',
-        borderBottom: '1px solid var(--border-subtle)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: 'var(--bg-surface-elevated)',
-        flexWrap: 'wrap',
-        gap: '12px',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Terminal size={18} color="var(--cyan-primary)" />
-          <span style={{ fontWeight: 700, fontSize: '14px' }}>
-            A2A Real-Time Event Stream
-          </span>
-          {pipelineId && (
-            <span style={{ 
-              fontFamily: 'var(--font-mono)', 
-              fontSize: '11px', 
-              color: 'var(--cyan-primary)',
-              background: 'rgba(0, 240, 255, 0.08)',
-              padding: '2px 8px',
-              borderRadius: '4px',
-            }}>
-              {pipelineId}
-            </span>
-          )}
-          {isRunning && (
-            <span className="badge badge-cyan" style={{ fontSize: '10px' }}>
-              Streaming Active
-            </span>
-          )}
-        </div>
-
-        {/* Controls: Filter + AutoScroll + Clear */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Filter by Agent */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-            <Filter size={13} color="var(--text-muted)" />
-            <select
-              value={filterAgent}
-              onChange={(e) => setFilterAgent(e.target.value)}
-              style={{
-                background: 'var(--bg-secondary)',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '4px 8px',
-                fontSize: '11px',
-                outline: 'none',
-              }}
-            >
-              <option value="all">All Agents</option>
-              <option value="pipeline">Pipeline</option>
-              <option value="compliance">Compliance</option>
-              <option value="reader">Reader</option>
-              <option value="analyst">Analyst</option>
-              <option value="memory">Memory</option>
-              <option value="strategist">Strategist</option>
-              <option value="formatter">Formatter</option>
-            </select>
+      <div className="terminal-header">
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div className="terminal-dots">
+            <span className="terminal-dot red"></span>
+            <span className="terminal-dot purple"></span>
+            <span className="terminal-dot green"></span>
           </div>
+          <span className="terminal-title">A2A PROTOCOL STREAM [JSON-RPC 2.0]</span>
+        </div>
+        <div className="terminal-tabs">
+          <button className={`terminal-tab${activeTermTab === 'stream' ? ' active' : ''}`} onClick={() => setActiveTermTab('stream')}>Live Stream</button>
+          <button className={`terminal-tab${activeTermTab === 'rpc' ? ' active' : ''}`} onClick={() => setActiveTermTab('rpc')}>A2A RPC Inspector</button>
+          <button className={`terminal-tab${activeTermTab === 'circuit' ? ' active' : ''}`} onClick={() => setActiveTermTab('circuit')}>Circuit Breaker</button>
+        </div>
+      </div>
 
-          {/* AutoScroll Toggle */}
-          <button
-            onClick={() => setAutoScroll(!autoScroll)}
-            style={{
-              background: autoScroll ? 'rgba(0, 240, 255, 0.12)' : 'var(--bg-secondary)',
-              border: `1px solid ${autoScroll ? 'var(--cyan-primary)' : 'var(--border-subtle)'}`,
-              color: autoScroll ? 'var(--cyan-primary)' : 'var(--text-muted)',
-              padding: '4px 10px',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '11px',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
-          >
-            <ArrowDown size={12} /> AutoScroll
+      {/* Filter Bar */}
+      <div className="terminal-filter-bar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+          <span className="text-dim">Filter:</span>
+          <button className="btn btn-ghost" style={{ padding: '2px 6px', fontSize: 10, border: 'none', background: 'var(--surface-container)' }}>All Agents</button>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+          <span className={`led ${isRunning ? 'pulse' : ''}`} style={{ background: isRunning ? 'var(--tertiary-fixed)' : 'var(--outline)', width: 8, height: 8 }}></span>
+          <span style={{ color: isRunning ? 'var(--tertiary-fixed)' : 'var(--outline)' }}>{isRunning ? 'WEBSOCKET: LIVE' : 'IDLE'}</span>
+          <span className="text-dim" style={{ marginLeft: 'var(--space-sm)' }}>|</span>
+          <button className="btn-icon" onClick={onClear} style={{ fontSize: 10, padding: '2px 4px' }} title="Clear log">
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
           </button>
-
-          {/* Clear Logs */}
           <button
-            onClick={onClear}
-            style={{
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-muted)',
-              padding: '4px 8px',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '11px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
-            title="Clear terminal logs"
+            className="btn-icon"
+            onClick={() => setAutoScroll(!autoScroll)}
+            style={{ fontSize: 10, padding: '2px 4px', color: autoScroll ? 'var(--primary-fixed)' : 'var(--outline)' }}
+            title={autoScroll ? 'Auto-scroll ON' : 'Auto-scroll OFF'}
           >
-            <Trash2 size={12} /> Clear
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>vertical_align_bottom</span>
           </button>
         </div>
       </div>
 
-      {/* Terminal Log Output Window */}
-      <div style={{
-        height: '280px',
-        overflowY: 'auto',
-        padding: '12px 18px',
-        background: '#07090e',
-        fontFamily: 'var(--font-mono)',
-        fontSize: '12px',
-        lineHeight: 1.6,
-      }}>
+      {/* Terminal Body */}
+      <div className="terminal-body" ref={containerRef}>
         {filteredEvents.length === 0 ? (
-          <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '40px 0', fontSize: '13px' }}>
-            No live events received yet. Click "Run A2A Pipeline" to launch autonomous agent coordination.
+          <div style={{ color: 'var(--outline)', fontStyle: 'italic', padding: 'var(--space-md)', textAlign: 'center' }}>
+            Awaiting pipeline events. Click "Trigger Run" to begin autonomous execution.
           </div>
         ) : (
-          filteredEvents.map((ev, index) => {
-            const timeStr = ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString() : '--:--:--';
+          filteredEvents.map((ev, i) => {
+            const agentName = (ev.agent || 'system').toUpperCase();
+            const tagClass = getAgentTagClass(ev.agent);
+            const isStrategist = agentName.includes('STRATEGIST');
+            const dataStr = ev.data ? (typeof ev.data === 'string' ? ev.data : JSON.stringify(ev.data)) : '';
+
             return (
-              <div 
-                key={index}
-                onClick={() => setSelectedEvent(ev)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '12px',
-                  padding: '4px 0',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
-                  cursor: 'pointer',
-                  transition: 'background var(--transition-fast)',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                <span style={{ color: 'var(--text-muted)', flexShrink: 0, fontSize: '11px' }}>
-                  [{timeStr}]
-                </span>
-
-                <span style={{ 
-                  color: 'var(--cyan-primary)', 
-                  fontWeight: 600, 
-                  textTransform: 'uppercase',
-                  minWidth: '90px',
-                  flexShrink: 0,
-                  fontSize: '11px',
-                }}>
-                  {ev.agent || 'SYSTEM'}
-                </span>
-
-                <span className={`badge ${getEventBadgeClass(ev)}`} style={{ fontSize: '9px', padding: '1px 6px', flexShrink: 0 }}>
-                  {ev.event || 'INFO'}
-                </span>
-
-                <span style={{ color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {ev.data ? JSON.stringify(ev.data) : ev.message || 'Stage event triggered'}
+              <div className={`terminal-line${isStrategist ? ' highlight' : ''}`} key={i}>
+                <span className="terminal-timestamp">{formatTimestamp(ev.timestamp)}</span>
+                <span className={`terminal-agent-tag ${isStrategist ? 'secondary-container' : tagClass}`}>{agentName}</span>
+                <span className="terminal-message">
+                  {ev.event && <span className={`badge ${getEventBadge(ev.event)}`} style={{ marginRight: 4 }}>{ev.event.toUpperCase()}</span>}
+                  {dataStr}
                 </span>
               </div>
             );
           })
         )}
-        <div ref={logEndRef} />
       </div>
 
-      {/* JSON Payload Inspector Drawer (When clicked) */}
-      {selectedEvent && (
-        <div style={{
-          padding: '12px 18px',
-          background: 'var(--bg-secondary)',
-          borderTop: '1px solid var(--border-subtle)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--cyan-primary)', textTransform: 'uppercase' }}>
-              A2A Event Inspector — {selectedEvent.agent} :: {selectedEvent.event}
-            </span>
-            <button 
-              onClick={() => setSelectedEvent(null)}
-              style={{ background: 'transparent', color: 'var(--text-muted)', fontSize: '11px' }}
-            >
-              Close Inspector
-            </button>
-          </div>
-          <pre style={{
-            background: '#05070a',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '10px',
-            fontSize: '11px',
-            fontFamily: 'var(--font-mono)',
-            color: '#38bdf8',
-            maxHeight: '140px',
-            overflowY: 'auto',
-          }}>
-            {JSON.stringify(selectedEvent, null, 2)}
-          </pre>
-        </div>
-      )}
+      {/* Command Line */}
+      <div className="terminal-command-line">
+        <span className="terminal-prompt">$ scrybe --</span>
+        <input
+          className="terminal-input"
+          placeholder="inject rpc://analyst/re-parse --target=anthropic --force-tier3"
+          type="text"
+        />
+        <button className="btn btn-secondary" style={{ padding: '4px var(--space-sm)' }}>Send</button>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
+import TopHeader from './components/TopHeader';
+import TelemetryRibbon from './components/TelemetryRibbon';
 import AgentTopology from './components/AgentTopology';
 import PipelineTerminal from './components/PipelineTerminal';
+import DeltaAlerts from './components/DeltaAlerts';
 import MatrixView from './components/MatrixView';
 import StrategicView from './components/StrategicView';
 import ComplianceLedger from './components/ComplianceLedger';
@@ -89,7 +92,6 @@ export default function App() {
     fetchAllData();
 
     function connectWebSocket() {
-      // Resolve WebSocket URL
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
       const wsUrl = `${protocol}//${host}/ws/pipeline`;
@@ -109,7 +111,6 @@ export default function App() {
 
             setPipelineEvents(prev => [...prev.slice(-300), msg]);
 
-            // Update agent execution state
             const agentName = (msg.agent || '').toLowerCase();
             const eventType = (msg.event || '').toLowerCase();
 
@@ -126,7 +127,6 @@ export default function App() {
               if (agentName === 'pipeline' || agentName === 'formatter') {
                 setIsRunning(false);
                 setActivePipelineStage(null);
-                // Refresh data upon pipeline completion
                 setTimeout(fetchAllData, 1000);
               }
             } else if (eventType === 'failed') {
@@ -143,7 +143,6 @@ export default function App() {
 
         socket.onclose = () => {
           setWsConnected(false);
-          // Try reconnecting in 3 seconds
           reconnectTimeoutRef.current = setTimeout(connectWebSocket, 3000);
         };
 
@@ -159,7 +158,6 @@ export default function App() {
 
     connectWebSocket();
 
-    // Heartbeat ping interval
     const pingInterval = setInterval(() => {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.send('ping');
@@ -219,101 +217,90 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Global Navbar */}
-      <Navbar
+    <div className="app-layout">
+      {/* Fixed Sidebar Navigation */}
+      <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         wsConnected={wsConnected}
-        isRunning={isRunning}
-        onTriggerPipeline={handleTriggerPipeline}
-        pipelineMode={pipelineMode}
-        setPipelineMode={setPipelineMode}
       />
 
-      {/* Main View Container */}
-      <main style={{
-        flex: 1,
-        maxWidth: '1440px',
-        width: '100%',
-        margin: '0 auto',
-        padding: '32px 28px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '32px',
-      }}>
-        {activeTab === 'topology' && (
-          <>
-            <AgentTopology
-              agents={agents}
-              agentStates={agentStates}
-              onSelectAgent={setSelectedAgentModal}
-              activePipelineStage={activePipelineStage}
-            />
+      {/* Main Content Area (offset by sidebar) */}
+      <div className="content-area">
+        {/* Fixed Top Header */}
+        <TopHeader
+          wsConnected={wsConnected}
+          isRunning={isRunning}
+          onTriggerPipeline={handleTriggerPipeline}
+          pipelineMode={pipelineMode}
+          setPipelineMode={setPipelineMode}
+        />
 
-            <PipelineTerminal
-              events={pipelineEvents}
-              isRunning={isRunning}
-              activeStage={activePipelineStage}
+        {/* Scrollable Main Content */}
+        <main className="main-content">
+          {/* ── Autonomous Pipeline Tab ─────────────────── */}
+          {activeTab === 'topology' && (
+            <>
+              {/* Telemetry Stat Ribbon */}
+              <TelemetryRibbon />
+
+              {/* Agent Swarm Topology */}
+              <AgentTopology
+                agentStates={agentStates}
+                onSelectAgent={setSelectedAgentModal}
+                activePipelineStage={activePipelineStage}
+              />
+
+              {/* Two Column: Terminal + Delta Alerts */}
+              <div className="split-layout">
+                <PipelineTerminal
+                  events={pipelineEvents}
+                  isRunning={isRunning}
+                  activeStage={activePipelineStage}
+                  pipelineId={currentPipelineId}
+                  onClear={() => setPipelineEvents([])}
+                />
+                <DeltaAlerts
+                  insights={strategicInsights}
+                />
+              </div>
+            </>
+          )}
+
+          {/* ── Pricing Matrix Tab ──────────────────────── */}
+          {activeTab === 'matrix' && (
+            <MatrixView
+              records={matrixRecords}
               pipelineId={currentPipelineId}
-              onClear={() => setPipelineEvents([])}
+              onRefresh={fetchAllData}
             />
-          </>
-        )}
+          )}
 
-        {activeTab === 'matrix' && (
-          <MatrixView
-            records={matrixRecords}
-            pipelineId={currentPipelineId}
-            onRefresh={fetchAllData}
-          />
-        )}
+          {/* ── Executive Intelligence Tab ──────────────── */}
+          {activeTab === 'strategy' && (
+            <StrategicView
+              insights={strategicInsights}
+              records={matrixRecords}
+            />
+          )}
 
-        {activeTab === 'strategy' && (
-          <StrategicView
-            insights={strategicInsights}
-            records={matrixRecords}
-          />
-        )}
+          {/* ── Compliance & Audit Tab ──────────────────── */}
+          {activeTab === 'compliance' && (
+            <ComplianceLedger
+              audits={complianceAudits}
+            />
+          )}
 
-        {activeTab === 'compliance' && (
-          <ComplianceLedger
-            audits={complianceAudits}
-          />
-        )}
+          {/* ── Reports / A2A Swarm Tab ─────────────────── */}
+          {activeTab === 'reports' && (
+            <ReportsView
+              reports={reports}
+            />
+          )}
+        </main>
+      </div>
 
-        {activeTab === 'reports' && (
-          <ReportsView
-            reports={reports}
-          />
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer style={{
-        marginTop: 'auto',
-        borderTop: '1px solid var(--border-subtle)',
-        background: 'var(--bg-secondary)',
-        padding: '20px 28px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        fontSize: '12px',
-        color: 'var(--text-muted)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span>Scrybe v0.2.0</span>
-          <span>•</span>
-          <span>A2A Protocol v1.0 Spec Compliant</span>
-          <span>•</span>
-          <span>JSON-RPC 2.0 Agent Handlers</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>Active Pipeline: {currentPipelineId || 'None'}</span>
-        </div>
-      </footer>
-
-      {/* Agent Card Modal */}
+      {/* Agent Detail Modal */}
       {selectedAgentModal && (
         <AgentCardModal
           agent={selectedAgentModal}

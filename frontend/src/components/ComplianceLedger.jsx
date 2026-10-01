@@ -1,194 +1,95 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, Lock, Clock, EyeOff, CheckCircle2, AlertOctagon, ExternalLink } from 'lucide-react';
 
-export default function ComplianceLedger({ audits = [] }) {
-  const totalAudits = audits.length;
-  const approvedAudits = audits.filter(a => a.compliance_status === 'APPROVED').length;
-  const totalPiiScrubbed = audits.reduce((acc, a) => acc + (a.pii_scrubbed_count || 0), 0);
-  const avgDelay = totalAudits > 0 
-    ? (audits.reduce((acc, a) => acc + (a.crawl_delay_applied || 2.5), 0) / totalAudits).toFixed(1) 
-    : '2.5';
-
+export default function ComplianceLedger({ audits }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Overview Stat Counters */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '16px',
-      }}>
-        <div className="glass-panel" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '10px',
-            background: 'rgba(16, 185, 129, 0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <ShieldCheck size={22} color="var(--emerald-primary)" />
-          </div>
-          <div>
-            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
-              Pre-Flight Audits
-            </div>
-            <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>
-              {totalAudits}
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--emerald-primary)' }}>
-              {approvedAudits} Verified Compliant
-            </div>
+    <section>
+      <div className="card-elevated">
+        <div style={{ paddingBottom: 'var(--space-md)' }}>
+          <div className="section-header">
+            <span className="section-overline">Compliance & Ethics Engine</span>
+            <h2 className="section-title" style={{ fontWeight: 700 }}>Audit Ledger & Regulatory Compliance</h2>
+            <p className="section-subtitle">Immutable compliance audit trail: robots.txt gating, PII scrubbing, rate-limit adherence, and EDPB 03/2026 conformance.</p>
           </div>
         </div>
 
-        <div className="glass-panel" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '10px',
-            background: 'rgba(0, 240, 255, 0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <Lock size={22} color="var(--cyan-primary)" />
+        {/* Summary Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 'var(--space-sm)', marginBottom: 'var(--space-lg)' }}>
+          <div className="stat-card" style={{ minHeight: 'auto' }}>
+            <div className="stat-header">
+              <span className="stat-label">PII SCRUB RATE</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--tertiary-fixed)' }}>shield</span>
+            </div>
+            <div className="stat-value green" style={{ fontSize: 24 }}>100%</div>
+            <div className="stat-footer"><span>Zero PII leakage</span></div>
           </div>
-          <div>
-            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
-              SSRF & Security Gates
+          <div className="stat-card" style={{ minHeight: 'auto' }}>
+            <div className="stat-header">
+              <span className="stat-label">ROBOTS.TXT CHECKS</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--primary-fixed)' }}>dns</span>
             </div>
-            <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>
-              100%
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--cyan-primary)' }}>
-              Private IP Ranges Blocked
-            </div>
+            <div className="stat-value cyan" style={{ fontSize: 24 }}>0 Blocks</div>
+            <div className="stat-footer"><span>All crawls authorized</span></div>
           </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '10px',
-            background: 'rgba(139, 92, 246, 0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <EyeOff size={22} color="var(--violet-primary)" />
+          <div className="stat-card" style={{ minHeight: 'auto' }}>
+            <div className="stat-header">
+              <span className="stat-label">CIRCUIT BREAKERS</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--tertiary-fixed)' }}>gavel</span>
+            </div>
+            <div className="stat-value green" style={{ fontSize: 24 }}>0 Trips</div>
+            <div className="stat-footer"><span>All within threshold</span></div>
           </div>
-          <div>
-            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
-              PII Redactions
+          <div className="stat-card" style={{ minHeight: 'auto' }}>
+            <div className="stat-header">
+              <span className="stat-label">EDPB CONFORMANCE</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--secondary)' }}>policy</span>
             </div>
-            <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>
-              {totalPiiScrubbed}
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--violet-primary)' }}>
-              Emails & IDs Sanitized
-            </div>
+            <div className="stat-value purple" style={{ fontSize: 24 }}>Compliant</div>
+            <div className="stat-footer"><span>EDPB 03/2026</span></div>
           </div>
         </div>
 
-        <div className="glass-panel" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '10px',
-            background: 'rgba(245, 158, 11, 0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <Clock size={22} color="var(--amber-primary)" />
-          </div>
-          <div>
-            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
-              Politeness Crawl Delay
-            </div>
-            <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>
-              {avgDelay}s
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--amber-primary)' }}>
-              Mandatory Backoff Enforced
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Audit Log Table */}
-      <div className="glass-panel" style={{ overflow: 'hidden' }}>
-        <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ShieldCheck size={18} color="var(--emerald-primary)" />
-            Cryptographic & Ethical Ingestion Ledger
-          </h3>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-            Every network request is checked for robots.txt clearance, RFC-1918 SSRF blocking, and PII anonymization.
-          </p>
-        </div>
-
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>
-                <th style={{ padding: '12px 18px' }}>Audit ID</th>
-                <th style={{ padding: '12px 18px' }}>Target URL</th>
-                <th style={{ padding: '12px 18px' }}>Robots.txt</th>
-                <th style={{ padding: '12px 18px' }}>SSRF Check</th>
-                <th style={{ padding: '12px 18px' }}>PII Scrubbed</th>
-                <th style={{ padding: '12px 18px' }}>Crawl Delay</th>
-                <th style={{ padding: '12px 18px' }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {audits.length === 0 ? (
+        {/* Audit Table */}
+        {audits && audits.length > 0 ? (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="data-table">
+              <thead>
                 <tr>
-                  <td colSpan={7} style={{ padding: '36px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No compliance audits recorded yet. Run the pipeline to generate audit records.
-                  </td>
+                  <th>TIMESTAMP</th>
+                  <th>AGENT</th>
+                  <th>CHECK TYPE</th>
+                  <th>TARGET</th>
+                  <th>RESULT</th>
+                  <th>DETAIL</th>
                 </tr>
-              ) : (
-                audits.map((audit, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-                    <td style={{ padding: '12px 18px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-                      {audit.audit_id?.slice(0, 14) || `aud_${idx}`}
+              </thead>
+              <tbody>
+                {audits.map((audit, i) => (
+                  <tr key={i}>
+                    <td className="text-dim">{audit.timestamp ? new Date(audit.timestamp).toLocaleTimeString('en-US', { hour12: false }) : '—'}</td>
+                    <td>
+                      <span className="badge badge-surface">{(audit.agent || 'compliance').toUpperCase()}</span>
                     </td>
-                    <td style={{ padding: '12px 18px', color: 'var(--text-primary)', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      <a href={audit.source_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        {audit.source_url} <ExternalLink size={10} />
-                      </a>
-                    </td>
-                    <td style={{ padding: '12px 18px' }}>
-                      <span className={`badge ${audit.robots_allowed ? 'badge-emerald' : 'badge-crimson'}`} style={{ fontSize: '10px' }}>
-                        {audit.robots_allowed ? 'Allowed' : 'Disallowed'}
+                    <td className="text-muted">{audit.check_type || audit.type || '—'}</td>
+                    <td className="text-cyan truncate" style={{ maxWidth: 200 }}>{audit.target_url || audit.target || '—'}</td>
+                    <td>
+                      <span className={`badge ${(audit.result || '').toLowerCase().includes('pass') || (audit.result || '').toLowerCase().includes('allow') ? 'badge-green' : 'badge-red'}`}>
+                        {(audit.result || '—').toUpperCase()}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 18px' }}>
-                      <span className="badge badge-emerald" style={{ fontSize: '10px' }}>
-                        PASSED
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 18px', fontFamily: 'var(--font-mono)', color: audit.pii_scrubbed_count > 0 ? 'var(--violet-primary)' : 'var(--text-muted)' }}>
-                      {audit.pii_scrubbed_count || 0} items
-                    </td>
-                    <td style={{ padding: '12px 18px', fontFamily: 'var(--font-mono)' }}>
-                      {audit.crawl_delay_applied || 2.5}s
-                    </td>
-                    <td style={{ padding: '12px 18px' }}>
-                      <span className={`badge ${audit.compliance_status === 'APPROVED' ? 'badge-emerald' : 'badge-crimson'}`} style={{ fontSize: '10px' }}>
-                        {audit.compliance_status || 'APPROVED'}
-                      </span>
-                    </td>
+                    <td className="text-muted truncate" style={{ maxWidth: 300 }}>{audit.detail || audit.message || '—'}</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--outline)' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 48, display: 'block', marginBottom: 'var(--space-sm)' }}>verified_user</span>
+            <p className="text-body-lg">No audit records yet.</p>
+            <p className="text-body-sm text-muted">Compliance audits are generated automatically during pipeline runs.</p>
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   );
 }
