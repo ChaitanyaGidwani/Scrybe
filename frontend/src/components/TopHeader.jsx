@@ -4,6 +4,7 @@ const TAB_TITLES = {
   dashboard: { title: 'Market Overview', subtitle: 'Real-time AI model pricing & competitor movements' },
   matrix: { title: 'Pricing Comparison', subtitle: 'Side-by-side normalized pricing across all competitors' },
   strategy: { title: 'Market Insights', subtitle: 'Actionable executive takeaways, price shifts, and opportunities' },
+  verdict: { title: 'Final Strategic Verdict', subtitle: 'Optimal model routing, margin maximization, and cost optimization' },
   reports: { title: 'Executive Reports', subtitle: 'Published market briefs and intelligence digests' },
   competitors: { title: 'Tracked Competitors', subtitle: '6 active AI providers monitored across the web' },
 };
