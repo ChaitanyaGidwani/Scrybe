@@ -768,7 +768,8 @@ input, textarea {
   justify-content: space-between;
   position: relative;
   overflow: hidden;
-  min-height: 120px;
+  min-height: 124px;
+  min-width: 0;
 }
 
 .stat-card::after {
@@ -794,25 +795,32 @@ input, textarea {
 .stat-label {
   font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stat-value-row {
   display: flex;
   align-items: baseline;
+  justify-content: flex-start;
   gap: var(--space-xs);
   margin: var(--space-xs) 0;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .stat-value {
   font-family: var(--font-headline);
-  font-size: 28px;
-  font-weight: 600;
-  line-height: 36px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 28px;
   letter-spacing: -0.02em;
   color: var(--on-surface);
+  white-space: nowrap;
 }
 
 .stat-value.cyan { color: var(--primary-fixed); }
@@ -822,18 +830,31 @@ input, textarea {
 .stat-sub {
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: var(--on-surface-variant);
+  white-space: nowrap;
 }
 
 .stat-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-xs);
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: var(--on-surface-variant);
+  min-width: 0;
+}
+
+.stat-footer > span:first-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.stat-footer > span:last-child {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ── Progress Bar ───────────────────────────────────────────── */
@@ -882,8 +903,10 @@ input, textarea {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
   cursor: pointer;
+  min-height: 210px;
+  min-width: 0;
 }
 
 .agent-card:hover {
@@ -902,6 +925,7 @@ input, textarea {
   align-items: center;
   gap: var(--space-xs);
   margin: var(--space-xs) 0;
+  min-width: 0;
 }
 
 .agent-icon {
@@ -913,6 +937,7 @@ input, textarea {
   align-items: center;
   justify-content: center;
   color: var(--primary-fixed);
+  flex-shrink: 0;
 }
 
 .agent-icon .material-symbols-outlined {
@@ -921,10 +946,13 @@ input, textarea {
 
 .agent-name {
   font-family: var(--font-headline);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--on-surface);
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .agent-role {
@@ -932,22 +960,31 @@ input, textarea {
   font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--on-surface-variant);
+  display: block;
 }
 
 .agent-desc {
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 16px;
   color: var(--on-surface-variant);
   margin-top: var(--space-xs);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  min-height: 32px;
 }
 
 .agent-stats {
-  margin-top: var(--space-md);
+  margin-top: auto;
   padding: var(--space-xs);
+  border-radius: var(--radius);
+  background: rgba(10, 14, 23, 0.6);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
   border-radius: var(--radius);
   background: rgba(10, 14, 23, 0.6);
   font-family: var(--font-mono);
